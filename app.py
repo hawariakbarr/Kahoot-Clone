@@ -6,16 +6,38 @@ import os
 app = Flask(__name__)   
 app.config['DEBUG'] = True
 
+alfabet=['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+number = ['0','1','2','3','4','5','6','7','8','9']
+extend = alfabet + number
 
-@app.route('/portfolio', methods=['GET'])
-def renderPage():
-    return render_template('index.html')
+
+def enkrip(string,move):
+    encodeString = ""
+    for x in range(len(string)):
+        tempString = extend.index(string[x]) + int(move)
+        encodeString = encodeString + extend[tempString % len(extend)]
+    return encodeString
+
+def dekrip(string,move):
+
+    decodeString = ""
+    for x in range(len(string)):
+        tempString = extend.index(string[x]) - int(move)
+        decodeString = decodeString + extend[tempString % len(extend)]
+
+    return decodeString        
+       
 
 ######register data creator quiz#######
 @app.route('/register', methods=["POST"])
 def userRegister():
     body = request.json
     
+    if body["method"] == "encrypt":
+        body["password"] = enkrip(body["password"], int(body["move"]))        
+    elif body["method"] == "decrypt":
+        body["password"] = dekrip(body["password"], int(body["move"]))        
+
     registerData = {
         "user-data": []
     }
@@ -28,26 +50,30 @@ def userRegister():
 
     with open('./user-register.json', 'w') as registerFile:
         registerData["user-data"].append(body)
+
         registerFile.write(str(json.dumps(registerData)))
 
     return jsonify(registerData)
+
+
 
 #######login creator quiz##########
 @app.route('/login', methods=["POST"])
 def loginUser():
     body = request.json
     statusLogin = False
-
+        
     registerFile = open('./user-register.json')
     registerData = json.load(registerFile)
 
     for data in registerData["user-data"]:
         # data = json.loads(data)
-
-        if data["user-id"] == int(body["user-id"]) and data["password"] == body["password"]:
-            statusLogin = True
-        else:
-            statusLogin = False
+        if body["method"] == "decrypt":
+            
+            if data["user-id"] == int(body["user-id"]) and data["username"] == body["username"] and dekrip(data["password"], int(body["move"])) == body["password"]:
+                statusLogin = True
+            else:
+                statusLogin = False
     return str(statusLogin)                        
         
 #bikin quiz baru  nomer1
@@ -95,9 +121,37 @@ def createQuestion():
 
     return str(questionData)
 
+data = []
+
+@app.route('/', methods=["POST"])
+def tryAja():
+    body = request.json
+    data.append(body["name"])
+
+    return jsonify(data)
+
+@app.route('/<name>', methods=["DELETE", "PUT"])
+def modifyData(name):
+    body = request.json
+
+    if request.method == "DELETE":        
+        data.remove(name)
+    elif request.method == "PUT":
+        index = data.index(name)
+        data[index] = body["new-name"]
+
+    return jsonify(data)
+
+def encrypt(string):
+    return string + "encrypted"
+
+def decrypt(string):
+    return string + "decrypted"
+
 #############################ambil data keseluruahn quiz / minta data kesluruhan dari quiz nomer3##########
-@app.route('/quizzes/<quizId>')
+@app.route('/quizzes/<quizId>', methods=["GET", "DELETE", "PUT"])
 def getQuiz(quizId):
+    body = request.json
 
     quizzesFile = open('./quizzes-file.json')
     quizzesData = json.load(quizzesFile) 
