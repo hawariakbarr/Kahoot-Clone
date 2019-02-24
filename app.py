@@ -72,7 +72,7 @@ def createQuiz():
     quizzesFile.write(str(json.dumps(quizData))) #
 
     return str(quizData)
-    
+
 ############################ kirim soal ke quiz / bikin soal ke quiz nomer 2####################################
 @app.route('/question', methods=["POST"])
 def createQuestion():
@@ -164,36 +164,6 @@ def createGame():
         gamesFile.write(str(json.dumps(gamesData)))
 
     return jsonify(gameInfo)
-
-###coba delete quiz dan edit quiz###
-@app.route('/<name>', methods=["DELETE", "PUT"])
-def modifyData(name):
-    body = request.json
-
-    if request.method == "DELETE":        
-        data.remove(name)
-    elif request.method == "PUT":
-        index = data.index(name)
-        data[index] = body["new-name"]
-
-    return jsonify(data)
-
-def encrypt(string):
-    return string + "encrypted"
-
-def decrypt(string):
-    return string + "decrypted"
-
-# delete quis sama edit informasi tentang kuisnya
-# @app.route('/quizzes/<quizId>', methods=["PUT", "DELETE"])
-
-
-
-
-
-
-
-
 
 ########################################join kedalam game sebagai user nomer5##############################
 @app.route('/game/join', methods=['POST'])
