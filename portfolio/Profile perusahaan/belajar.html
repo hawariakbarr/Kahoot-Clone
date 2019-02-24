@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cara Penggunaan Background Repeat pada CSS</title>
+    <style>
+body {
+    font-family: Arial;
+}
+
+div {
+  width: 600px;
+  height: 130px;
+  border: 5px solid #444444;
+  margin-bottom: 20px;
+  background: url(images.png);
+}
+
+#repeat {
+    background-repeat: repeat;
+}
+
+#no-repeat {
+    background-repeat: no-repeat;
+}
+
+#repeat-x {
+    background-repeat: repeat-x;
+}
+
+#repeat-y {
+    background-repeat: repeat-y;
+}
+
+
+    </style>
+</head>
+<body>
+    <h2>1. background-repeat: repeat; </h2>
+    <div id="repeat"></div>
+
+    <h2>2. background-repeat: no-repeat;</h2>
+    <div id="no-repeat"></div>
+
+    <h2>3. background-repeat: repeat-x;</h2>
+    <div id="repeat-x"></div>
+
+    <h2>4. background-repeat: repeat-y;</h2>
+    <div id="repeat-y"></div>
+</body>
+</html>
