@@ -128,8 +128,7 @@ def getQuiz(quizId):
         # quiz = json.loads(quiz)
 
         if quiz["quiz-id"] == int(quizId):
-            quizData = quiz
-            
+            quizData = quiz            
             break
 
     questionFile = open('./question-file.json')            
@@ -183,7 +182,7 @@ def updateQuiz(quizId):
 
     return jsonify(quizData)
 #ambil pertanyaan tertentu dari sebuah quiz
-@app.route('/quizzes/<quizId>/questions/<questionNumber>')
+@app.route('/quizzes/<quizId>/questions/<questionNumber>', methods = ["PUT", "GET", "DELETE"])
 def getThatQuestion(quizId, questionNumber):
     quizData = getQuiz(int(quizId)).json
     
