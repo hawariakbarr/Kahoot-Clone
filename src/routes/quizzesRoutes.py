@@ -1,17 +1,20 @@
-from flask import request, json, jsonify
+from flask import request, json, jsonify, g
 import os
 
 from . import router, baseLocation
 from pathlib import Path
 from ..utils.file import readFile
-
+from ..utils.authorization import verifyLogin
 
 quizzesFileLocation = baseLocation / "data" / "quizzes-file.json" 
 questionFileLocation = baseLocation / "data" / "questions-file.json" 
 
 @router.route('/quizzes', methods=["POST"])
+@verifyLogin
 def createQuiz():
     body = request.json
+    print("username:",g.username)
+
     quizData = {
         "total-quiz-available": 0,
         "quizzes": []
@@ -29,6 +32,7 @@ def createQuiz():
     return jsonify(quizData)
 
 @router.route('/quizzes/<quizId>', methods = ["PUT", "GET", "DELETE"])
+@verifyLogin
 def function(quizId):
     if request.method == "DELETE":
         return deleteQuiz(quizId)

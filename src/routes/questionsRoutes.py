@@ -4,10 +4,12 @@ import os
 from . import router, baseLocation
 from pathlib import Path
 from .quizzesRoutes import *
+from ..utils.authorization import verifyLogin
 
 questionsFileLocation = baseLocation / "data" / "questions-file.json" 
 
 @router.route('/quizzes/question', methods=["POST"])
+@verifyLogin
 def createQuestion():
     body = request.json
 
@@ -26,6 +28,7 @@ def createQuestion():
     return jsonify(questionData)
 
 @router.route('/quizzes/<quizId>/questions/<questionNumber>', methods = ["PUT", "GET", "DELETE"])
+@verifyLogin
 def getThatQuestion(quizId, questionNumber):
     quizData = getQuiz(int(quizId)).json
 

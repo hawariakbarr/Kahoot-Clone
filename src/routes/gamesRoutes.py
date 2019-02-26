@@ -8,12 +8,14 @@ from .quizzesRoutes import *
 from .questionsRoutes import *
 
 from ..utils.file import readFile, writeFile, checkFile
+from ..utils.authorization import verifyLogin
 
 gamesFileLocation = baseLocation / "data" / "games-file.json" 
 quizzesFileLocation = baseLocation / "data" / "quizzes-file.json" 
 questionFileLocation = baseLocation / "data" / "questions-file.json" 
 
 @router.route('/game', methods = ['POST'])
+@verifyLogin
 def createGame():
     body = request.json
 
@@ -123,6 +125,7 @@ def submitAnswer():
 
 
 @router.route('/game/leaderboard', methods = ["POST"])
+@verifyLogin
 def getLeaderboard():
     body = request.json
 

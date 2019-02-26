@@ -3,6 +3,7 @@ import os
 from . import router, baseLocation
 from .. utils.crypt import forEncrypt, forDecrypt
 from pathlib import Path
+from .. utils.authorization import generateToken
 
 userFileLocation = baseLocation / "data" / "user-register.json"
 
@@ -33,15 +34,15 @@ def userRegister():
 @router.route('/users/login', methods=["POST"])
 def loginUser():
     body = request.json
-    
-        
+
     registerFile = open(userFileLocation)
     registerData = json.load(registerFile)
 
     for data in registerData["user-data"]:
         if data["user-id"] == int(body["user-id"]) and data["username"] == body["username"] and forDecrypt(data["password"]) == body["password"]:
             statusLogin = "Login mantap cuyyy"
+            body["token"] = generateToken(body["username"])
         else:
             statusLogin = "Aduh ada yg salah, cek lagi punten"
 
-    return statusLogin                       
+    return jsonify(body)                      
