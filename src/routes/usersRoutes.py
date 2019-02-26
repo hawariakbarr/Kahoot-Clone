@@ -6,10 +6,9 @@ from pathlib import Path
 
 userFileLocation = baseLocation / "data" / "user-register.json"
 
-
-
 @router.route('/users', methods=["POST"])
 def userRegister():
+    print(os.getenv("API_KEY"))
     body = request.json
 
     body["password"] = forEncrypt(body["password"])

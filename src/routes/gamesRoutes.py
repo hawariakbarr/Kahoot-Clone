@@ -7,6 +7,8 @@ from pathlib import Path
 from .quizzesRoutes import *
 from .questionsRoutes import *
 
+from ..utils.file import readFile, writeFile, checkFile
+
 gamesFileLocation = baseLocation / "data" / "games-file.json" 
 quizzesFileLocation = baseLocation / "data" / "quizzes-file.json" 
 questionFileLocation = baseLocation / "data" / "questions-file.json" 
@@ -16,11 +18,9 @@ def createGame():
     body = request.json
 
     # dapetin info quiz
-    quizzesFile = open(quizzesFileLocation)
-    quizzesData = json.load(quizzesFile)
+    quizzesData = readFile(quizzesFileLocation)
 
     for quiz in quizzesData["quizzes"]:
-        # quiz = json.loads(quiz)
 
         if quiz["quiz-id"] == int(body["quiz-id"]):
             gameInfo = quiz
@@ -35,16 +35,10 @@ def createGame():
         "game-list": []
     }
 
-    # simpen data game nya
-    if os.path.exists(gamesFileLocation):
-        gamesFile = open(gamesFileLocation, 'r')
-        gamesData = json.load(gamesFile)
-    else:
-        gamesFile = open(gamesFileLocation, 'x')
+    checkFile(gamesFileLocation)
 
-    with open(gamesFileLocation, 'w') as gamesFile:
-        gamesData["game-list"].append(gameInfo)
-        gamesFile.write(str(json.dumps(gamesData)))
+    gamesData["game-list"].append(gameInfo)
+    writeFile(gamesFileLocation,gamesData)
 
     return jsonify(gameInfo)
 
@@ -54,8 +48,7 @@ def joinGame():
     body = request.json
 
     # open game data information
-    gamesFile = open(gamesFileLocation)
-    gamesData = json.load(gamesFile)
+    gamesData = readFile(gamesFileLocation)
 
     position = 0
     for i in range(len(gamesData["game-list"])):
@@ -74,10 +67,9 @@ def joinGame():
                 break
             # TODO: error kalau usernya udah dipake
 
-    with open(gamesFileLocation, 'w') as gamesFile:
-        gamesData["game-list"][position] = gameInfo
-        gamesFile.write(str(json.dumps(gamesData)))
-        
+    gamesData["game-list"][position] = gameInfo
+    writeFile(gamesFileLocation, gamesData)
+
     return jsonify(request.json)
 
 

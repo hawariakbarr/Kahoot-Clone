@@ -19,7 +19,7 @@ def createQuestion():
         questionFile = open(questionsFileLocation, "r")
         questionData = json.load(questionFile)
 
-    questionFile = open(questionsFileLocation,'w')        
+    questionFile = open(questionsFileLocation,'w')   
     questionData["question"].append(body)
     questionFile.write(str(json.dumps(questionData))) #
 

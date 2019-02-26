@@ -3,6 +3,8 @@ import os
 
 from . import router, baseLocation
 from pathlib import Path
+from ..utils.file import readFile
+
 
 quizzesFileLocation = baseLocation / "data" / "quizzes-file.json" 
 questionFileLocation = baseLocation / "data" / "questions-file.json" 
