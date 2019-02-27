@@ -35,10 +35,9 @@ def createGame():
         "game-list": []
     }
 
-    checkFile(gamesFileLocation
-    )
+    if os.path.exists(gamesFileLocation):
+        gamesData = readFile(gamesFileLocation)
     gamesData["game-list"].append(gameInfo)
-    
     writeFile(gamesFileLocation, gamesData)
 
     return jsonify(gameInfo)
