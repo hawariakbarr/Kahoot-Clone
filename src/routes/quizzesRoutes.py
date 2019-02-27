@@ -20,8 +20,10 @@ def createQuiz():
         "quizzes": []
     }
 
-    if os.path.exists(quizzesFileLocation):
+    try:
         quizData = readFile(quizzesFileLocation)
+    except:
+        print("No file for load")
 
     quizData["total-quiz-available"] += 1
     quizData["quizzes"].append(body)
@@ -40,25 +42,36 @@ def function(quizId):
         return updateQuiz(quizId)        
 
 def getQuiz(quizId):
-    quizzesData = readFile(quizzesFileLocation)
-    thereIsQuiz = False
+    quizFound = False
+    response = {
+        "error": True,
+        "message" : "no file quiz"
+    }
+    try:
+        quizzesData = readFile(quizzesFileLocation)
+    except:
+        response["message"] = "error while load quiz data"
+    else:       
+        for quiz in quizzesData["quizzes"]:
+            if quiz["quiz-id"] == int(quizId):
+                quizData = quiz            
+                quizFound = True
 
-    for quiz in quizzesData["quizzes"]:
-        if quiz["quiz-id"] == int(quizId):
-            quizData = quiz            
-            thereIsQuiz = True
-            break
+                response["error"] = False
+                response["data"] = quizData
+                break
 
-    if not thereIsQuiz:
-        return jsonify("quiz-id " + "not found")
+    if quizFound:
+        try:
+            questionData = readFile(questionsFileLocation)
+        except:
+            print("no file question")
+        else:        
+            for question in questionData["question"]:
+                if question["quiz-id"] == int(quizId):
+                    quizData["question-list"].append(question)
 
-    questionData = readFile(questionsFileLocation)
-
-    for question in questionData["question"]:
-        if question["quiz-id"] == int(quizId):
-            quizData["question-list"].append(question)
-
-    return jsonify(quizData)
+    return jsonify(response)
 
 def deleteQuiz(quizId):
     questionData = readFile(questionsFileLocation)

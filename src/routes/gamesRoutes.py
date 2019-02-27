@@ -42,7 +42,6 @@ def createGame():
 
     return jsonify(gameInfo)
 
-
 @router.route('/game/join', methods=['POST'])
 def joinGame():
     body = request.json
