@@ -20,7 +20,8 @@ def createQuiz():
         "quizzes": []
     }
 
-    checkFile(quizzesFileLocation)        
+    if os.path.exists(quizzesFileLocation):
+        quizData = readFile(quizzesFileLocation)
 
     quizData["total-quiz-available"] += 1
     quizData["quizzes"].append(body)
