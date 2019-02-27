@@ -44,13 +44,13 @@ def function(quizId):
 def getQuiz(quizId):
     quizFound = False
     response = {
-        "error": True,
-        "message" : "no file quiz"
+        "error": True
     }
     try:
         quizzesData = readFile(quizzesFileLocation)
     except:
         response["message"] = "error while load quiz data"
+        return response
     else:       
         for quiz in quizzesData["quizzes"]:
             if quiz["quiz-id"] == int(quizId):
@@ -71,7 +71,7 @@ def getQuiz(quizId):
                 if question["quiz-id"] == int(quizId):
                     quizData["question-list"].append(question)
 
-    return jsonify(response)
+    return jsonify(quizData)
 
 def deleteQuiz(quizId):
     questionData = readFile(questionsFileLocation)

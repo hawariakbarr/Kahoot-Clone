@@ -1,4 +1,5 @@
 import jwt
+import os
 from datetime import datetime, timedelta
 
 def encode(data):
@@ -7,9 +8,9 @@ def encode(data):
         "exp": datetime.utcnow() + timedelta(days=10),
         "iat": datetime.utcnow()
     }
-    encoded = jwt.encode(payload,"biocell",algorithm="HS256").decode('utf-8')
+    encoded = jwt.encode(payload,os.getenv("SECRET"),algorithm="HS256").decode('utf-8')
     return encoded
 
 def decode(data):
-    decoded = jwt.decode(data,"biocell",algorithms="HS256")    
+    decoded = jwt.decode(data,os.getenv("SECRET"),algorithms="HS256")    
     return decoded

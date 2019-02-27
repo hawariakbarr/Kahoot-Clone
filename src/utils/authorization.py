@@ -1,4 +1,4 @@
-from flask import request, json, g
+from flask import request, json, g, abort
 from .crypt import forEncrypt, forDecrypt
 from .token import encode, decode
 from functools import wraps
@@ -13,7 +13,7 @@ def generateToken(data):
 def verifyLogin(f):
     @wraps(f)
     def decoratedFunction(*args, **kwargs):
-
+        
         token = request.headers["Authorization"][7:]
         data = decode(token)
         username = forDecrypt(data["data"])
