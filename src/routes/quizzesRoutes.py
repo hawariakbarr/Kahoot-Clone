@@ -3,11 +3,11 @@ import os
 
 from . import router, baseLocation
 from pathlib import Path
-from ..utils.file import readFile
+from ..utils.file import readFile, checkFile, writeFile
 from ..utils.authorization import verifyLogin
 
 quizzesFileLocation = baseLocation / "data" / "quizzes-file.json" 
-questionFileLocation = baseLocation / "data" / "questions-file.json" 
+questionsFileLocation = baseLocation / "data" / "questions-file.json" 
 
 @router.route('/quizzes', methods=["POST"])
 @verifyLogin
@@ -19,16 +19,13 @@ def createQuiz():
         "total-quiz-available": 0,
         "quizzes": []
     }
-    if os.path.exists(quizzesFileLocation) and os.path.getsize(quizzesFileLocation) > 0:
-        quizzesFile = open(quizzesFileLocation, "r")
-        quizData = json.load(quizzesFile)
+
+    checkFile(quizzesFileLocation)        
 
     quizData["total-quiz-available"] += 1
     quizData["quizzes"].append(body)
 
-    quizzesFile = open(quizzesFileLocation,'w')        
-    quizzesFile.write(str(json.dumps(quizData))) #
-
+    writeFile(quizzesFileLocation, quizData)
     return jsonify(quizData)
 
 @router.route('/quizzes/<quizId>', methods = ["PUT", "GET", "DELETE"])
@@ -42,63 +39,75 @@ def function(quizId):
         return updateQuiz(quizId)        
 
 def getQuiz(quizId):
-    quizzesFile = open(quizzesFileLocation)
-    quizzesData = json.load(quizzesFile) 
+    quizzesData = readFile(quizzesFileLocation)
+    thereIsQuiz = False
 
     for quiz in quizzesData["quizzes"]:
-        # quiz = json.loads(quiz)
-
         if quiz["quiz-id"] == int(quizId):
             quizData = quiz            
+            thereIsQuiz = True
             break
 
-    questionFile = open(questionFileLocation)            
-    questionData = json.load(questionFile)
+    if not thereIsQuiz:
+        return jsonify("quiz-id " + "not found")
+
+    questionData = readFile(questionsFileLocation)
 
     for question in questionData["question"]:
-        # question = json.loads(question)
         if question["quiz-id"] == int(quizId):
             quizData["question-list"].append(question)
 
     return jsonify(quizData)
 
 def deleteQuiz(quizId):
-    quizzesFile = open(quizzesFileLocation)
-    quizData = json.load(quizzesFile)
+    questionData = readFile(questionsFileLocation)
+    
+    LquestionList = 0
+    questionList = []
+    for question in questionData["question"]:
+        index = questionData["question"].index(question)
+        if question["quiz-id"] == int(quizId):
+            LquestionList += 1
+            questionList.append(index)
+
+    deletingIndex = 0
+    indexDeleted = 0
+    for i in range(LquestionList):
+        deletingIndex = questionList[i] - indexDeleted
+        del questionData["question"][deletingIndex]
+        indexDeleted += 1        
+    
+    writeFile(questionsFileLocation, questionData)
+    
+    quizData = readFile(quizzesFileLocation)
 
     for i in range(len(quizData["quizzes"])):
         quiz = quizData["quizzes"][i]
-        # quiz = json.loads(quiz)
-
 
         if quiz["quiz-id"] == (int(quizId)): 
             del quizData["quizzes"][i] 
             quizData["total-quiz-available"] -= 1 
             break
 
-    quizzesFile = open(quizzesFileLocation, 'w')
-    quizzesFile.write(str(json.dumps(quizData)))
-
+    writeFile(quizzesFileLocation, quizData)
+    
     return jsonify(quizData)
 
 def updateQuiz(quizId):
     body = request.json
 
-    quizzesFile = open(quizzesFileLocation)
-    quizData = json.load(quizzesFile)
+    quizData = readFile(quizzesFileLocation)
 
     for i in range(len(quizData["quizzes"])):
         quiz = quizData["quizzes"][i]
-        # quiz = json.loads(quiz)
 
         if quiz["quiz-id"] == (int(quizId)):  
             quiz["quiz-id"] = body["quiz-id"]
             quiz["quiz-name"] = body["quiz-name"]
             quiz["quiz-category"] = body["quiz-category"]
             quizData["quizzes"][i] = quiz
-        break        
+        break                
 
-    quizzesFile = open(quizzesFileLocation, 'w')
-    quizzesFile.write(str(json.dumps(quizData)))
+    writeFile(quizzesFileLocation, quizData)
 
     return jsonify(quizData)
