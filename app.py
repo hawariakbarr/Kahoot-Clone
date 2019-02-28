@@ -1,12 +1,12 @@
-from flask import Flask, request, json, abort
+from flask import Flask, request, json, abort, jsonify
 from src.routes import router
 import jwt
 
 app = Flask(__name__)   
 app.register_blueprint(router)
 
-@app.route('/tes')
-def tes():
-    abort(404)
-
-
+@app.route('/penjumlahan/<int:numb1>/<int:numb2>')
+def jumlah(numb1, numb2):
+    return jsonify({
+        "hasil": numb1+numb2
+    })
