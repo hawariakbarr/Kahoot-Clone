@@ -1,13 +1,13 @@
-from flask import request, json, jsonify
+from flask import request, json, jsonify, abort
 import os
 
-from . import router, baseLocation
+from . import router, baseLocation, questionsFileLocation
 from pathlib import Path
 from .quizzesRoutes import *
 from ..utils.file import readFile, writeFile, checkFile
 from ..utils.authorization import verifyLogin
 
-questionsFileLocation = baseLocation / "data" / "questions-file.json" 
+# questionsFileLocation = baseLocation / "data" / "questions-file.json" 
 
 @router.route('/quizzes/question', methods=["POST"])
 @verifyLogin
@@ -29,13 +29,30 @@ def createQuestion():
 @router.route('/quizzes/<quizId>/questions/<questionNumber>')
 @verifyLogin
 def getThatQuestion(quizId, questionNumber):
-    quizData = getQuiz(int(quizId)).json
-    quizzesData = readFile(quizzesFileLocation)
-    
-    for question in quizData["question-list"]:
-        if question["question-number"] == int(questionNumber):
-            return jsonify(question)
+    questionFound = False
 
+    response = {
+        "error": False
+    }
+    try:
+        questionData = readFile(questionsFileLocation)
+    except:
+        response["message"] = "error while load question data"
+        return jsonify(response)
+    else:
+        for question in questionData["question"]:
+            if question["question-number"] == int(questionNumber):
+                dataQuestion = question
+                questionFound = True
+
+                response["error"] = False
+                response["data"] = dataQuestion
+                break
+    
+    if not questionFound:    
+        response["error"] = True
+        response["message"] = "question not found"
+    return jsonify(response)        
 
 @router.route('/quizzes/<quizId>/questions/<questionNumber>', methods=["PUT","DELETE"])
 def updateDelete(quizId,questionNumber):

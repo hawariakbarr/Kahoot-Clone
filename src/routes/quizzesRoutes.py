@@ -1,19 +1,19 @@
 from flask import request, json, jsonify, g
 import os
 
-from . import router, baseLocation
+from . import router, baseLocation, quizzesFileLocation, questionsFileLocation
 from pathlib import Path
 from ..utils.file import readFile, checkFile, writeFile
 from ..utils.authorization import verifyLogin
-
-quizzesFileLocation = baseLocation / "data" / "quizzes-file.json" 
-questionsFileLocation = baseLocation / "data" / "questions-file.json" 
 
 @router.route('/quizzes', methods=["POST"])
 @verifyLogin
 def createQuiz():
     body = request.json
     print("username:",g.username)
+    response = {
+        "error": False
+    }
 
     quizData = {
         "total-quiz-available": 0,
@@ -23,8 +23,11 @@ def createQuiz():
     try:
         quizData = readFile(quizzesFileLocation)
     except:
-        print("No file for load")
+        response["message"] = "quiz file is not found"
+        
 
+    
+    
     quizData["total-quiz-available"] += 1
     quizData["quizzes"].append(body)
 
@@ -50,7 +53,7 @@ def getQuiz(quizId):
         quizzesData = readFile(quizzesFileLocation)
     except:
         response["message"] = "error while load quiz data"
-        return response
+        return jsonify(response)
     else:       
         for quiz in quizzesData["quizzes"]:
             if quiz["quiz-id"] == int(quizId):
@@ -70,8 +73,10 @@ def getQuiz(quizId):
             for question in questionData["question"]:
                 if question["quiz-id"] == int(quizId):
                     quizData["question-list"].append(question)
+    else:
+        response["message"] = "quiz is not found"
 
-    return jsonify(quizData)
+    return jsonify(response)
 
 def deleteQuiz(quizId):
     questionData = readFile(questionsFileLocation)
