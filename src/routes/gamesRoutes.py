@@ -15,28 +15,12 @@ def createGame():
     quizFound = False
     body = request.json
 
-    response = {
-        "error" : True
-    }
-
-    # dapetin info quiz
-    try:
-        quizzesData = readFile(quizzesFileLocation)
-    except:
-        response["message"] = "error while load quiz data"
-        return jsonify(response)
+    quizzesData = readFile(quizzesFileLocation)
     
     for quiz in quizzesData["quizzes"]:
         if quiz["quiz-id"] == int(body["quiz-id"]):
             gameInfo = quiz
-            quizFound = True
-
-            response["error"] = False
-            response["data"] = gameInfo
             break            
-        else:
-            response["message"] = "there is no quiz, quiz not found"
-        return jsonify (response)
         
     gameInfo["game-pin"] = randint(100000, 999999)
     gameInfo["user-list"] = []
@@ -47,83 +31,58 @@ def createGame():
     gamesData = {
         "game-list": []
     }
-    if quizFound:    
-        try:
-            if os.path.exists(gamesFileLocation):
-                gamesData = readFile(gamesFileLocation)
-        except:
-            response["message"] = "games file is not found"
-        
-        else:
-            gamesData["game-list"].append(gameInfo)
-            writeFile(gamesFileLocation, gamesData)
-    else:
-        response["message"] = "games is not found"
-    
-    return jsonify(response)
+    # if quizFound:    
+    if os.path.exists(gamesFileLocation):
+        gamesData = readFile(gamesFileLocation)
+
+    gamesData["game-list"].append(gameInfo)
+    writeFile(gamesFileLocation, gamesData)
+
+    return jsonify(gameInfo)
 
 @router.route('/game/join', methods=['POST'])
 def joinGame():
     body = request.json
 
-    response = {
-        "error": True
-    }
-    try:
-        gamesData = readFile(gamesFileLocation)
-    except:
-        response["message"] = "games file cannot load or not found"
-    else:
-        position = 0
-        for i in range(len(gamesData["game-list"])):
-            game = gamesData["game-list"][i]
-            if game["game-pin"] == int(body["game-pin"]):
-                if body["username"] not in game["user-list"]:               
-                    game["user-list"].append(body["username"])
-                    game["leaderboard"].append({
-                        "username": body["username"],
-                        "score": 0
-                        })
+    gamesData = readFile(gamesFileLocation)
 
-                    gameInfo = game
-                    response["data"] = gameInfo
-                    response["error"] = False
-                    position = i
-                    break                    
-                else:
-                    response["message"] = "username is used, change username"
-                    return jsonify(response)
+    position = 0
+    for i in range(len(gamesData["game-list"])):
+        game = gamesData["game-list"][i]
 
+        if game["game-pin"] == int(body["game-pin"]):
+            if body["username"] not in game["user-list"]:               
+                game["user-list"].append(body["username"])
+                game["leaderboard"].append({
+                    "username": body["username"],
+                    "score": 0
+                    })
+
+                gameInfo = game
+                position = i
+                break                    
+            else:
+                response["message"] = "username is used, change username"
+                    
     gamesData["game-list"][position] = gameInfo
     writeFile(gamesFileLocation, gamesData)
 
-    return jsonify(response)
+    return jsonify(gameInfo)
 
 @router.route('/game/answer', methods=['POST'])
 def submitAnswer():
     isTrue = False
     body = request.json
 
-    response = {
-        "error": False
-    }
-    # buka file question
-    try:
-        questionData = readFile(questionsFileLocation)
+    questionData = readFile(questionsFileLocation)
 
-    except:
-        response["message"] = "there is no question file or question is not found"
-        return jsonify(response)
-
-    for question in questionsData["question"]:
+    for question in questionData["question"]:
         if question["quiz-id"] == int(body["quiz-id"]) and question["question-number"] == int(body["question-number"]):
             if question["answer"] == body["answer"]:
                 isTrue = True
-        #     else:
-
-        # else                
-    gamesData = readFile(gamesFileLocation)
     
+    gamesData = readFile(gamesFileLocation)
+            
     gamePosition = 0
     for i in range(len(gamesData["game-list"])):
         game = gamesData["game-list"][i]
@@ -140,14 +99,14 @@ def submitAnswer():
                         userInfo = userData
                         userPosition = j
                         break
-
-                game["leaderboard"][userPosition]
+                        
+                game["leaderboard"][userPosition] = userInfo
                 gameInfo = game
                 gamePosition = i
                 break
 
-        gamesData["game-list"][gamePosition] = gameInfo
-        writeFile(gamesFileLocation, gamesData)
+    gamesData["game-list"][gamePosition] 
+    writeFile(gamesFileLocation, gamesData)
 
     return jsonify(request.json)
 

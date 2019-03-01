@@ -13,4 +13,4 @@ def readFile(fileLocation):
 def checkFile(fileLocation):
     if os.path.exists(fileLocation):
         theFile = open(fileLocation, 'r')
-        data = json.load(theFile)    
+        return json.load(theFile)    

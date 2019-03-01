@@ -10,14 +10,12 @@ userFileLocation = baseLocation / "data" / "user-register.json"
 
 @router.route('/users', methods=["POST"])
 def userRegister():
-    # print(os.getenv("API_KEY"))
     body = request.json
-    userNameAndEmailUsed = False
+    userNameOrEmailUsed = False
 
     registerData = {
         "total-user-register": 0,
         "user-data": []
-        
     }
 
     response = {
@@ -33,12 +31,11 @@ def userRegister():
         
         for data in registerData["user-data"]:
             if data["username"] == body["username"] or data["email"] == body["email"]:
-                userNameAndEmailUsed = True
-
+                userNameOrEmailUsed = True
                 response["error"] = True
                 break
                 
-    if not userNameAndEmailUsed:        
+    if not userNameOrEmailUsed:        
         registerData["total-user-register"] += 1
         body["password"] = forEncrypt(body["password"])
         registerData["user-data"].append(body)
@@ -46,25 +43,38 @@ def userRegister():
         writeFile(userFileLocation, registerData)
         
         del body["password"]
-
         response["data"] = body
-    else:
-        del body["password"]        
+    else:      
         response["message"] = "email or username is used"
-    return jsonify(registerData)
+    return jsonify(response)
 
 
 @router.route('/users/login', methods=["POST"])
 def loginUser():
     body = request.json
+    response = {
+        "error": False
+    }
+    try: 
+        registerData = readFile(userFileLocation)
 
-    registerData = readFile(userFileLocation)
+    except:
+        response["error"] = True
+        response["message"] = ""
 
-    for data in registerData["user-data"]:
-        if data["user-id"] == int(body["user-id"]) and data["username"] == body["username"] and forDecrypt(data["password"]) == body["password"]:
-            statusLogin = "Login mantap cuyyy"
-            body["token"] = generateToken(body["username"])
-        else:
-            statusLogin = "Aduh ada yg salah, cek lagi punten"
-
-    return jsonify(body)                      
+        return jsonify(response)
+    else:
+        for data in registerData["user-data"]:
+            if data["username"] == body["username"] and forDecrypt(data["password"]) == body["password"]:
+                userData = body
+                body["token"] = generateToken(body["username"])
+                body.pop("password")
+                response["error"] = False
+                response["message"] = "Login Success"
+                response["data"] = body
+                break
+            else:
+                response["error"] = True
+                response["message"] = "login failed, username and email is wrong. Try again"
+            
+    return jsonify(response)                      

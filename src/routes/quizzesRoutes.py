@@ -10,29 +10,37 @@ from ..utils.authorization import verifyLogin
 @verifyLogin
 def createQuiz():
     body = request.json
-    print("username:",g.username)
-    response = {
-        "error": False
-    }
-
+    idUsed = False
     quizData = {
         "total-quiz-available": 0,
         "quizzes": []
     }
-
+    
+    response = {}
+    
     try:
         quizData = readFile(quizzesFileLocation)
     except:
-        response["message"] = "quiz file is not found"
+        print("No Quiz for Load")
+
+    for quiz in quizData["quizzes"]:
+        if quiz["quiz-id"] == body["quiz-id"]:
+            idUsed = True
+            break
         
+    if idUsed == True:           
+        response["error"] = True
+        response["message"] = "Quiz Id is Used"
+        return jsonify(response)
 
-    
-    
-    quizData["total-quiz-available"] += 1
-    quizData["quizzes"].append(body)
+    else:
+        quizData["total-quiz-available"] += 1
+        quizData["quizzes"].append(body)
+        response["data"] = quizData
+        response["error"] = False
+        writeFile(quizzesFileLocation, quizData)        
 
-    writeFile(quizzesFileLocation, quizData)
-    return jsonify(quizData)
+    return jsonify(response)
 
 @router.route('/quizzes/<quizId>', methods = ["PUT", "GET", "DELETE"])
 @verifyLogin
@@ -79,8 +87,15 @@ def getQuiz(quizId):
     return jsonify(response)
 
 def deleteQuiz(quizId):
-    questionData = readFile(questionsFileLocation)
+    body = request.json
     
+    response = {}
+    try:
+        questionData = readFile(questionsFileLocation)
+    except:
+        response["message"] = "Error while load question data"
+        return jsonify(response)
+
     LquestionList = 0
     questionList = []
     for question in questionData["question"]:
@@ -98,35 +113,56 @@ def deleteQuiz(quizId):
     
     writeFile(questionsFileLocation, questionData)
     
-    quizData = readFile(quizzesFileLocation)
-
+    try:
+        quizData = readFile(quizzesFileLocation)
+    except:
+        response["message"] = "Error while load quiz data"
+        return jsonify(response)
+    idMatch = False
     for i in range(len(quizData["quizzes"])):
         quiz = quizData["quizzes"][i]
 
         if quiz["quiz-id"] == (int(quizId)): 
-            del quizData["quizzes"][i] 
-            quizData["total-quiz-available"] -= 1 
+            idMatch = True
             break
-
+        else:
+            idMatch == False
+    if idMatch == True:
+        del quizData["quizzes"][i] 
+        quizData["total-quiz-available"] -= 1 
+        response["message"] = "Delete Success"            
+    else:
+        response["message"] = "Quiz Id is not Match, try again"
+        return jsonify(response)
     writeFile(quizzesFileLocation, quizData)
-    
-    return jsonify(quizData)
+    return jsonify(response)
 
 def updateQuiz(quizId):
     body = request.json
-
-    quizData = readFile(quizzesFileLocation)
-
+    idMatch = False
+    response = {}
+    try:
+        quizData = readFile(quizzesFileLocation)
+    except:
+        response["message"] = "Error while load quiz data"
+        return jsonify(response)
     for i in range(len(quizData["quizzes"])):
         quiz = quizData["quizzes"][i]
 
         if quiz["quiz-id"] == (int(quizId)):  
-            quiz["quiz-id"] = body["quiz-id"]
-            quiz["quiz-name"] = body["quiz-name"]
-            quiz["quiz-category"] = body["quiz-category"]
-            quizData["quizzes"][i] = quiz
-        break                
+            idMatch = True
+            break
 
+    if idMatch == True:
+        quiz["quiz-id"] = body["quiz-id"]
+        quiz["quiz-name"] = body["quiz-name"]
+        quiz["quiz-category"] = body["quiz-category"]
+        quizData["quizzes"][i] = quiz
+        response["data"] = quizData
+            
+    else:
+        response["message"] = "Quiz Id is not match, Try again"
+        
     writeFile(quizzesFileLocation, quizData)
 
-    return jsonify(quizData)
+    return jsonify(response)

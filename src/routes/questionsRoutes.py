@@ -7,24 +7,37 @@ from .quizzesRoutes import *
 from ..utils.file import readFile, writeFile, checkFile
 from ..utils.authorization import verifyLogin
 
-# questionsFileLocation = baseLocation / "data" / "questions-file.json" 
-
 @router.route('/quizzes/question', methods=["POST"])
 @verifyLogin
 def createQuestion():
     body = request.json
-
+    numberIsUsed = False    
     questionData = {
         "question":[]
     }
+    response = {}
 
-    if os.path.exists(questionsFileLocation):
+    try:
         questionData = readFile(questionsFileLocation)
+    except:
+        print("No File question For Load")
 
-    questionData["question"].append(body)
-    writeFile(questionsFileLocation, questionData)
+    for question in questionData["question"]:
+        if question["question-number"] == body["question-number"]:
+            numberIsUsed = True
+            break
 
-    return jsonify(questionData)
+    if numberIsUsed == True:
+        response["error"] = True
+        response["message"] = "Question Number is Used"
+
+    else:
+        questionData["question"].append(body)
+        response["data"] = questionData
+        response["error"] = False
+        writeFile(questionsFileLocation, questionData)
+
+    return jsonify(response)
 
 @router.route('/quizzes/<quizId>/questions/<questionNumber>')
 @verifyLogin
@@ -62,17 +75,54 @@ def updateDelete(quizId,questionNumber):
         return updateQuestion(quizId, questionNumber)
 
 def deleteQuestion(quizId,questionNumber):
-    questionData = readFile(questionsFileLocation)
+    allMatch = False
+    response = {}
 
-    questionToBeDeleted = getThatQuestion(int(quizId), int(questionNumber)).json 
-
+    try:
+        questionData = readFile(questionsFileLocation)
+    except:
+        response["message"] = "error while load question data"
+        return jsonify(response)
+    
     for i in range(len(questionData["question"])):
-        if questionData["question"][i] == questionToBeDeleted:
-            del questionData["question"][i]
-            # message = "Berhasil menghapus question Number " + questionNumber + " dari quiz id " + quizId
+        question = questionData["question"][i]
+        if question["quiz-id"] == (int(quizId)) and question["question-number"] == (int(questionNumber)):
+            allMatch = True
             break
-        # else:
-        #     message = "Gagal menghapus. Tidak ada quiz-id " + quizId + " atau question Number " + questionNumber
+        else:
+            allMatch == False
+
+    if allMatch == True:
+        del questionData["question"][i]
+        response["message"] = "Delete question success"
+    else:
+        response["message"] = "Quiz id or Number Question is not match"
+        return jsonify(response)
+        
+    writeFile(questionsFileLocation, questionData)
+    return jsonify(response)
+
+def updateQuestion(quizId, questionNumber):
+    body = request.json
+    questionData = readFile(questionsFileLocation)
+    allMatch = False
+
+    response = {}
+    
+    for i in range(len(questionData["question"])):
+        question = questionData["question"][i]
+        if question["quiz-id"] == (int(quizId)) and question["question-number"] == (int(questionNumber)):
+            allMatch = True
+            break
+        else:
+            allMatch = False             
+    
+    if allMatch == True:
+        questionData["question"][i] = {**questionData["question"][i], **body}       
+        response["data"] = questionData["question"][i]
+    else:
+        response["message"] = "Update Failed, quiz id or question number not match"
+        return jsonify(response)
 
     writeFile(questionsFileLocation, questionData)
-    return jsonify(questionData)
+    return jsonify(response)
