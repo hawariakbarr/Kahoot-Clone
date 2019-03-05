@@ -42,6 +42,25 @@ def createQuiz():
 
     return jsonify(response)
 
+@router.route('/quizzes/all-quizzes')
+@verifyLogin
+def allQuiz():
+    
+    response = {}
+    try:
+        quizzesData = readFile(quizzesFileLocation)
+    except:
+        response["error"] = True
+        response["message"] = "Quiz File cannot load"
+
+    else:
+        response["error"] = False
+        response["data"] = quizzesData
+
+    return jsonify(response)
+
+
+
 @router.route('/quizzes/<quizId>', methods = ["PUT", "GET", "DELETE"])
 @verifyLogin
 def function(quizId):

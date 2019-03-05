@@ -39,6 +39,23 @@ def createQuestion():
 
     return jsonify(response)
 
+@router.route('/quizzes/all-questions')
+@verifyLogin
+def getAllQuestion():
+    response = {}
+
+    try:
+        questionData = readFile(questionsFileLocation)
+    except:
+        response["error"] = True
+        response["message"] = "Question file cannot load"
+
+    else:
+        response["error"] = False
+        response["data"] = questionData
+
+    return jsonify(response)        
+
 @router.route('/quizzes/<quizId>/questions/<questionNumber>')
 @verifyLogin
 def getThatQuestion(quizId, questionNumber):
@@ -125,4 +142,4 @@ def updateQuestion(quizId, questionNumber):
         return jsonify(response)
 
     writeFile(questionsFileLocation, questionData)
-    return jsonify(response)
+    return jsonify(response)    
