@@ -1,0 +1,64 @@
+mport datetime
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+class Leaderboards(db.Model):
+    tablename = 'leaderboards'
+
+    game_pin = db.Column(db.Integer, db.ForeignKey('games.game_pin'))
+    participant = db.Column(db.String(), primary_key=True)
+    score = db.Column(db.Integer, default=0)
+
+    def __init__(self, game_pin, participant, score):
+        self.game_pin = game_pin
+        self.participant = participant
+        self.score = score
+    
+    def serialize(self):
+        return {
+            # 'game_pin': self.game_pin,
+            'username': self.participant,
+            'score': self.score
+        }   
+
+
+# answer
+@app.route('/answerGame/<game_pin_>', methods=['POST'])
+def submit_answer(game_pin_):
+    # quiz_id_ = request.args.get('quiz_id')
+    number_ = request.args.get('question_number')
+    username_ = request.args.get('username')
+    answer_ = request.args.get('answer')
+    # nyari quiz_id
+    try:
+        game = Games.query.filter_by(game_pin=game_pin_).first()
+        quiz_id_ = game.quiz_id
+    except Exception as e:
+        return str(e)
+    try:
+        question = Questions.query.join(Quizzess, Quizzess.id==Questions.quiz_id).filter(Questions.quiz_id==quiz_id_, Questions.number==number_).first()
+        answer = question.answer
+    except Exception as e:
+        return(str(e))
+    try:
+        leaderboard = Leaderboards.query.filter_by(game_pin=game_pin_, participant=username_).first()
+        score = leaderboard.score
+    except Exception as e:
+        return(str(e))
+
+    # kalau jawaban benar
+    if answer == answer_:
+        score += 100
+
+    #
+    try:
+        leaderboard = {
+            'game_pin': game_pin_,
+            'participant': username_,
+            'score': score
+        }
+        db.session.query(Leaderboards).filter(Leaderboards.game_pin==game_pin_, Leaderboards.participant==username_).update(leaderboard)
+        db.session.commit()
+        return 'Correct answer, your score is {}'.format(leaderboard['score'])
+    except Exception as e:
+        return(str(e))        

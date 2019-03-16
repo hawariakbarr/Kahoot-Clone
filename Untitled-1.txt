@@ -1,0 +1,51 @@
+from flask import Flask, json,jsonify, request
+from flask_sqlalchemy import SQLAlchemy
+import datetime
+from random import randint
+from crypt import encrypt
+from auth import generateToken
+
+db.init_app(app)
+from model import *
+
+# @app.route('/joinGame', methods=["POST"])
+# def joinGame():
+#     body = request.json
+#     try:
+#         leaderboard = Leaderboard(
+#             player = body['player'],
+#             game_pin = body['game_pin'],
+#             score = 0,
+#             deleted_status = False
+#         )
+#         db.session.add(leaderboard)
+#         db.session.commit()
+#         return "Join game Berhasil, Player = {}".format(leaderboard.player)
+#     except Exception as e:
+#         return (str(e))
+
+@app.route('/answerQuestion', methods=["POST"])
+def answerQuestion():
+    body = request.json
+    try:
+        games = Games.query.filter_by(game_pin = body['game_pin']).first()
+        leaderboard = Leaderboard.query.filter_by(game_pin = body['game_pin'], player = body['player']).first()
+        data_question = Data_question.query.filter_by(quiz_id = games.quiz_id, question_number = body['question_number']).first()
+        message ="Jawaban anda salah!"
+        if data_question.answer == body['answer']:
+            leaderboard.score += 100
+            message = "Jawaban Anda Benar"
+
+        db.session.commit()
+        return message
+    except Exception as e:
+        return (str(e))
+
+@app.route('/leaderboard', methods=["GET"])
+def leaderboard():
+    try:
+        games = Games.query.order_by(Games.game_pin).all()
+        return jsonify([emstr.serialize()for emstr in games])
+
+    except Exception as e:
+        return(str(e))
