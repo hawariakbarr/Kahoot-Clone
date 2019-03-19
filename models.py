@@ -6,22 +6,29 @@ class User(db.Model):
 
     user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String())
+    full_name = db.Column(db.String())
     password = db.Column(db.String())
     email = db.Column(db.String())
     created_on = db.Column(db.DateTime, default = datetime.datetime.now)
 
-    def __init__(self, user_id, username, password, email):
-        self.user_id = user_id
+    def __init__(self, username, full_name, password, email):
         self.username = username
+        self.full_name = full_name
         self.password = password
         self.email = email
+    
+    def __repr__(self):
+        return '<user_id()>'.format(self.user_id)
 
     def serialize(self):
         return{
             'user-id': self.user_id,
             'username': self.username,
+            'full_name': self.full_name,
             'password': self.password,
-            'email': self.email
+            
+            'email': self.email,
+            'created_on': self.created_on
         }
 
 class Quiz(db.Model):
@@ -35,18 +42,21 @@ class Quiz(db.Model):
     question = db.relationship('Question', backref='quiz', lazy = True)
     created_on = db.Column(db.DateTime, default = datetime.datetime.now)
 
-    def __init__(self, quiz_id, user_id, quiz_category, quiz_name, quiz_desc):
-        self.quiz_id = quiz_id
+    def __init__(self,  user_id, quiz_category, quiz_name, quiz_desc):
         self.user_id = user_id
         self.quiz_category = quiz_category
         self.quiz_name = quiz_name
         self.quiz_desc = quiz_desc
 
+
+    def __repr__(self):
+        return '<quiz_id()>'.format(self.quiz_id)
+
     def serialize(self):
         user_data = User.query.filter(User.user_id==self.user_id).first()
         return{            
             'creator_id': self.user_id,
-            'creator_quiz': user_data.username,
+            'creator_quiz': user_data.full_name,
             'quiz_id': self.quiz_id,
             'quiz_category': self.quiz_category,
             'quiz_name': self.quiz_name,
@@ -64,11 +74,13 @@ class Question(db.Model):
     answer_option = db.relationship('Option', backref='question', lazy = True)
     created_on = db.Column(db.DateTime, default = datetime.datetime.now)
 
-    def __init__(self, question_id, quiz_id, the_question, correct_answer):
-        self.question_id = question_id
+    def __init__(self, quiz_id, the_question, correct_answer):
         self.quiz_id = quiz_id
         self.the_question = the_question
         self.correct_answer = correct_answer
+
+    def __repr__(self):
+        return '<question_id()>'.format(self.question_id)
 
     def serialize(self):
         return{
@@ -91,14 +103,17 @@ class Option(db.Model):
     d = db.Column(db.String())
     created_on = db.Column(db.DateTime, default = datetime.datetime.now)
 
-    def __init__(self, option_id, question_id, quiz_id, a, b, c, d):
-        self.option_id = option_id
+    def __init__(self, question_id, quiz_id, a, b, c, d):
+        
         self.question_id = question_id
         self.quiz_id = quiz_id
         self.a = a
         self.b = b
         self.c = c
         self.d = d
+
+    def __repr__(self):
+        return '<option_id()>'.format(self.option_id)
 
     def serialize(self):
         return{

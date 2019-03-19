@@ -37,8 +37,8 @@ def registerUser():
     body = request.json
     try:
         user = User(
-            user_id=body["user_id"],
             username= body["username"],
+            full_name= body["full_name"],
             password=forEncrypt(body["password"]),
             email=body["email"]
             )
@@ -46,9 +46,10 @@ def registerUser():
         db.session.add(user)
         db.session.commit()
 
-        return "User data has registered. user id={}. username={}".format(user.user_id, user.username)
+        body['message'] = "Registration Success, Please Login"
+        return jsonify(body), 200
     except Exception as e:
-        return(str(e))
+        return(str(e)), 400
 
 @app.route('/login-user', methods=["POST"])
 def loginUser():
@@ -60,7 +61,7 @@ def loginUser():
         if user.username == body['username'] and forDecrypt(user.password) == body['password']:
             body["token"] = generateToken(body["username"])
             body.pop("password")
-            body['message'] = "Login Success, welcome {}".format(user.username)
+            body['message'] = "Login Success, welcome {}".format(user.full_name)
             return jsonify(body), 200
         else: 
             # response['message'] = "Login Failed, username or password maybe wrong or not found"
@@ -94,10 +95,9 @@ def deleteUserById(id_):
 @app.route('/create-quiz', methods=["POST"])
 def createQuiz():
     body = request.json
-
+    
     try:
         quiz = Quiz(
-            quiz_id=body["quiz_id"],
             user_id=body["user_id"],
             quiz_name=body["quiz_name"],
             quiz_category=body['quiz_category'],
@@ -106,9 +106,10 @@ def createQuiz():
         
         db.session.add(quiz)
         db.session.commit()
-        return "Quiz data has added. quiz id={}".format(quiz.quiz_id)
+        body['message'] = "Quiz name {} has added".format(quiz.quiz_name)   
+        return jsonify(body),200
     except Exception as e:
-        return(str(e))
+        return(str(e)),400
 
 @app.route('/get-all-quiz', methods=["GET"])
 def getAllQuiz():
@@ -123,9 +124,9 @@ def getAllQuiz():
 def getQuizById(id_):
     try:
         quiz = Quiz.query.filter_by(quiz_id = id_).first()
-        return jsonify(quiz.serialize())
+        return jsonify(quiz.serialize()), 200
     except Exception as e:
-        return(str(e))
+        return(str(e)), 400
 
 @app.route('/delete-quiz-by-id/<id_>', methods=["DELETE"])
 def deleteQuizById(id_):
@@ -145,11 +146,11 @@ def updateQuiz(id_):
     try:
         quiz = Quiz.query.filter_by(quiz_id = id_).first()
         for key, value in body.items():
-            if key == "quiz-name":
+            if key == "quiz_name":
                 quiz.quiz_name = value
-            elif key == "quiz-category":
+            elif key == "quiz_category":
                 quiz.quiz_category = value
-            elif key == "quiz-description":
+            elif key == "quiz_description":
                 quiz.quiz_desc = value
 
     except Exception as e:
@@ -164,13 +165,11 @@ def createQuestion():
 
     try:
         question = Question(
-            question_id=body["question_id"],
             quiz_id=body["quiz_id"],
             the_question=body["the_question"],
             correct_answer=body["correct_answer"]
             )
         answer_option = Option(
-            option_id=body["option_id"],
             question_id=body["question_id"],
             quiz_id=body["quiz_id"],
             a=body["A"],
@@ -191,7 +190,6 @@ def addOption():
 
     try:
         answer_option = Option(
-            option_id=body["option_id"],
             question_id=body["question_id"],
             quiz_id=body["quiz_id"],
             a=body["A"],
