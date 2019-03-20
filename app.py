@@ -31,6 +31,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://%(user)s:\
 db.init_app(app)
 from models import *
 
+# BEGINING OF USER ROUTES
+
 @app.route('/register-user', methods=["POST"])
 def registerUser():
 
@@ -69,9 +71,8 @@ def loginUser():
     except:
         return "Username is not found",404
 
-
 @app.route('/get-all-users', methods=["GET"])
-# @verifyLogin
+
 def getAllUsers():
     try:
         user = User.query.order_by(User.user_id).all()
@@ -81,9 +82,9 @@ def getAllUsers():
     except Exception as e:
         return(str(e))
 
-
 @app.route('/delete-user-by-id/<id_>', methods=["DELETE"])
 def deleteUserById(id_):
+    
     try:
         user = User.query.filter_by(user_id = id_).delete()
         db.session.commit()
@@ -91,6 +92,12 @@ def deleteUserById(id_):
         return "User has deleted"
     except Exception as e:
         return(str(e))
+
+# END OF USER ROUTES
+
+
+
+# BEGINING OF QUIZ ROUTES
 
 @app.route('/create-quiz', methods=["POST"])
 def createQuiz():
@@ -159,26 +166,31 @@ def updateQuiz(id_):
     db.session.commit()
     return "Quiz data has updated. quiz id={}".format(quiz.quiz_id)
 
-@app.route('/create-question', methods=["POST"])
-def createQuestion():
+# END OF QUIZ ROUTES
+
+
+
+# BEGINING OF QUESTION ROUTES
+
+@app.route('/create-question/<quiz_id_>', methods=["POST"])
+def createQuestion(quiz_id_):
     body = request.json
+
+    option = body['answer_option']
+    a=option["A"]
+    b=option["B"]
+    c=option["C"]
+    d=option["D"]
 
     try:
         question = Question(
-            quiz_id=body["quiz_id"],
-            the_question=body["the_question"],
-            correct_answer=body["correct_answer"]
+            quiz_id=quiz_id_,
+            the_question=body["the-question"],
+            correct_answer=body["correct-answer"]
             )
-        answer_option = Option(
-            quiz_id=body["quiz_id"],
-            question_id=body["question_id"],
-            a=body["A"],
-            b=body["B"],
-            c=body["C"],
-            d=body["D"]
-        )
+
+        question.answer_option = [Option(Question.question_id,a,b,c,d)]
         db.session.add(question)
-        db.session.add(answer_option)
         db.session.commit()
         body['message'] = "Question data has added. Question id={}".format(question.question_id)
         return jsonify(body), 200
@@ -186,26 +198,6 @@ def createQuestion():
     except Exception as e:
         return (str(e))
     
-
-@app.route('/add-option', methods=["POST"])
-def addOption():
-    body = request.json
-
-    try:
-        answer_option = Option(
-            question_id=body["question_id"],
-            quiz_id=body["quiz_id"],
-            a=body["A"],
-            b=body["B"],
-            c=body["C"],
-            d=body["D"]
-            )
-        db.session.add(answer_option)
-        db.session.commit()
-        return "Option data has added. Option id={}".format(answer_option.option_id)
-    except Exception as e:
-        return(str(e))
-
 @app.route('/get-all-question', methods=["GET"])
 def getAllQuestion():
     try:
@@ -235,7 +227,7 @@ def deleteQuestionById(id_):
         return(str(e))
 
 @app.route('/update-question/<id_>', methods=["PUT"])
-def updateQuestionById(id_):    
+def updateQuestionById(id_,):    
     body = request.json
     try:
         question = Question.query.filter_by(question_id = id_).first()
@@ -245,21 +237,15 @@ def updateQuestionById(id_):
                 question.the_question = value
             elif key == "correct-answer":
                 question.correct_answer = value
-
-            elif key == "the-question":
-                option.the_question = value   
-                
+                 
         option = Option.query.filter_by(option_id = id_).first()
         for key, value in body.items():   
-            if key == "correct-answer":
-                option.correct_answer = value
-            elif key == "A":
+            if key == "A":
                 option.a = value
             elif key == "B":
                 option.b = value
             elif key == "C":
                 option.c = value
-
             elif key == "D":
                 option.d = value               
     except Exception as e:
@@ -268,6 +254,43 @@ def updateQuestionById(id_):
     db.session.commit()
     return "Question data has updated. question id={}".format(question.question_id)
 
+# END OF QUESTION ROUTES
+
+
+
+# ADD OPTION
+@app.route('/add-option/<question_id_>', methods=["POST"])
+def addOption(question_id_):
+    body = request.json
+
+    try:
+        answer_option = Option(
+            question_id=question_id_,
+            a=body["A"],
+            b=body["B"],
+            c=body["C"],
+            d=body["D"]
+            )
+        db.session.add(answer_option)
+        db.session.commit()
+        return "Option data has added. Option id={}".format(answer_option.option_id)
+    except Exception as e:
+        return(str(e))
+
+@app.route('/get-all-option', methods=["GET"])
+def getAllOption():
+    try:
+        option = Option.query.order_by(Option.option_id).all()
+        return jsonify([emstr.serialize()for emstr in option])
+
+    except Exception as e:
+        return(str(e))
+
+
+# END OF ADD OPTION
+
+
+# BEGINING OF GAME ROUTES
 @app.route('/create-game', methods=["POST"])
 def createGame():
     body = request.json
@@ -323,7 +346,10 @@ def getGameInfo():
 
     except Exception as e:
         return(str(e))
+# END OF GAME ROUTES
 
+
+# SUBMIT ANSWER
 @app.route('/submit-answer/<game_pin_>', methods=["POST"])
 def submitAnswer(game_pin_):
     body = request.json 
@@ -360,7 +386,10 @@ def submitAnswer(game_pin_):
         return "Answer is true you got 100 poin"
     except Exception as e:
         return(str(e))
+# END OF SUBMIT ANSWER
 
+
+# LEADERBOARD
 @app.route('/leaderboard/<game_pin>', methods=['GET'])
 def get_leaderboard_by_game_pin(game_pin):
     try:
@@ -368,6 +397,8 @@ def get_leaderboard_by_game_pin(game_pin):
         return jsonify([board.serialize() for board in leaderboard])
     except Exception as e:
         return(str(e))
+# END OF LEADERBOARD
+
 
 if __name__ == '__main__':
     app.run(host = "0.0.0.0", port=5000)        

@@ -35,7 +35,7 @@ class Quiz(db.Model):
     __tablename__ = 'quiz'        
 
     quiz_id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user_data.user_id'),foreign_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user_data.user_id'))
     quiz_category = db.Column(db.String())
     quiz_name = db.Column(db.String())    
     quiz_desc = db.Column(db.String())
@@ -55,13 +55,13 @@ class Quiz(db.Model):
     def serialize(self):
         user_data = User.query.filter(User.user_id==self.user_id).first()
         return{            
-            'creator_id': self.user_id,
-            'creator_quiz': user_data.full_name,
-            'quiz_id': self.quiz_id,
-            'quiz_category': self.quiz_category,
-            'quiz_name': self.quiz_name,
-            'quiz_description': self.quiz_desc,
-            'question_list': [{'question-number':item.question_id,'question':item.the_question} for item in self.question]
+            'creator-id': self.user_id,
+            'creator-quiz': user_data.full_name,
+            'quiz-id': self.quiz_id,
+            'quiz-category': self.quiz_category,
+            'quiz-name': self.quiz_name,
+            'quiz-description': self.quiz_desc,
+            'question-list': [{'question-id':item.question_id,'question':item.the_question} for item in self.question]
         }
 
 class Question(db.Model):
@@ -83,9 +83,11 @@ class Question(db.Model):
         return '<question_id()>'.format(self.question_id)
 
     def serialize(self):
+        quiz = Quiz.query.filter(Quiz.quiz_id==self.quiz_id).first()
         return{
             'quiz-id': self.quiz_id,
-            'question-number': self.question_id,
+            'quiz-name': quiz.quiz_name,
+            'question-id': self.question_id,
             'question': self.the_question,
             'option': [{'A':item.a, 'B':item.b, 'C':item.c, 'D':item.d } for item in self.answer_option],
             'correct-answer': self.correct_answer
@@ -96,17 +98,15 @@ class Option(db.Model):
 
     option_id = db.Column(db.Integer, primary_key=True)
     question_id = db.Column(db.Integer,db.ForeignKey('question.question_id'),foreign_key=True)
-    quiz_id = db.Column(db.Integer,db.ForeignKey('quiz.quiz_id'), foreign_key=True)
     a = db.Column(db.String())
     b = db.Column(db.String())
     c = db.Column(db.String())
     d = db.Column(db.String())
     created_on = db.Column(db.DateTime, default = datetime.datetime.now)
 
-    def __init__(self, question_id, quiz_id, a, b, c, d):
+    def __init__(self, question_id, a, b, c, d):
         
         self.question_id = question_id
-        self.quiz_id = quiz_id
         self.a = a
         self.b = b
         self.c = c
@@ -117,8 +117,7 @@ class Option(db.Model):
 
     def serialize(self):
         return{
-            'quiz-id': self.quiz_id,
-            'question-number': self.question_id,
+            'question-id': self.question_id,
             'option-id': self.option_id,
             'a': self.a,
             'b': self.b,
