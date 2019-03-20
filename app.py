@@ -170,8 +170,8 @@ def createQuestion():
             correct_answer=body["correct_answer"]
             )
         answer_option = Option(
-            question_id=body["question_id"],
             quiz_id=body["quiz_id"],
+            question_id=body["question_id"],
             a=body["A"],
             b=body["B"],
             c=body["C"],
@@ -180,9 +180,12 @@ def createQuestion():
         db.session.add(question)
         db.session.add(answer_option)
         db.session.commit()
-        return "Question data has added. Question id={}".format(question.question_id)
+        body['message'] = "Question data has added. Question id={}".format(question.question_id)
+        return jsonify(body), 200
+
     except Exception as e:
-        return(str(e))
+        return (str(e))
+    
 
 @app.route('/add-option', methods=["POST"])
 def addOption():
