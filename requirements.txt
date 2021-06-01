@@ -12,5 +12,5 @@ pycodestyle==2.5.0
 PyJWT==1.7.1
 python-dotenv==0.10.1
 requests==2.21.0
-urllib3==1.24.1
+urllib3==1.26.5
 Werkzeug==0.14.1
