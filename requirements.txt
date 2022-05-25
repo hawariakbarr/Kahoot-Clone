@@ -9,7 +9,7 @@ itsdangerous==1.1.0
 Jinja2==2.10
 MarkupSafe==1.1.0
 pycodestyle==2.5.0
-PyJWT==1.7.1
+PyJWT==2.4.0
 python-dotenv==0.10.1
 requests==2.21.0
 urllib3==1.24.1
